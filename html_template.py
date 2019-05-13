@@ -1,3 +1,4 @@
+#author: Paulo Henrique Junqueira Amorim
 
 def table(text):
     #to disable interpolation

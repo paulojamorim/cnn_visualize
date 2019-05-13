@@ -9,6 +9,8 @@ import imageio
 from keras.applications.vgg16 import VGG16
 import html_template as ht
 
+IMG_FOLDER = '/img/'
+
 def write_html(files_path, html_path):
     html_file = open(html_path, 'w+')
  
@@ -21,8 +23,9 @@ def write_html(files_path, html_path):
             for filters in layer:
 
                     cell_line = ''
-                    for channel in filters:
-                        cell_line += ht.cell(channel)
+                    for channel_file in filters:
+                        channel_file = '.' + IMG_FOLDER + os.path.basename(channel_file)
+                        cell_line += ht.cell(channel_file)
                     
                     filters_html += ht.row(cell_line)
                   
@@ -88,7 +91,7 @@ if __name__ == '__main__':
     #Change for your model
     model = VGG16()
     
-    out_dir = os.path.abspath(sys.argv[1]) + '/img/'
+    out_dir = os.path.abspath(sys.argv[1]) + IMG_FOLDER
     
     if not(os.path.exists(out_dir)):
         os.makedirs(out_dir)
