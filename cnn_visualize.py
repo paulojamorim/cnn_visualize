@@ -51,7 +51,7 @@ def filter_visualize(model, layer_number, out_dir):
             fshape = filters.shape
             n_filters = fshape[-1]
             depth = fshape[-2]
-            
+           
             #normalize 0-1
             f_min, f_max = filters.min(), filters.max()
             filters = (filters - f_min) / (f_max - f_min)
@@ -96,7 +96,6 @@ if __name__ == '__main__':
     if not(os.path.exists(out_dir)):
         os.makedirs(out_dir)
     
-    file_list = filter_visualize(model, 1, out_dir)
+    file_list = filter_visualize(model, int(sys.argv[2]), out_dir)
     html_path = os.path.join(os.path.abspath(os.path.join(out_dir,"../")),'index.html')
-    
     write_html(file_list, html_path)
