@@ -6,8 +6,9 @@
 import os
 import sys
 import imageio
-from keras.applications.vgg16 import VGG16
 import html_template as ht
+
+from keras.applications.vgg16 import VGG16
 
 IMG_FOLDER = '/img/'
 
@@ -86,6 +87,19 @@ def filter_visualize(model, layer_number, out_dir):
     
     return layer_
 
+def get_filters(model):
+    
+    filters_ = []
+    n = 1
+    for layer in model.layers:
+        if 'conv' not in layer.name:
+            continue
+        filters, biases = layer.get_weights()
+        filters_.append((n, layer.name, filters.shape))
+        n += 1
+    
+    return filters_
+
 if __name__ == '__main__':
 
     #Change for your model
@@ -96,6 +110,12 @@ if __name__ == '__main__':
     if not(os.path.exists(out_dir)):
         os.makedirs(out_dir)
     
-    file_list = filter_visualize(model, int(sys.argv[2]), out_dir)
+    filters = get_filters(model)
+    for f in filters:
+        print(f)
+
+    filter_number = input('Select the filter number to generate visualization: ')
+
+    file_list = filter_visualize(model, int(filter_number), out_dir)
     html_path = os.path.join(os.path.abspath(os.path.join(out_dir,"../")),'index.html')
     write_html(file_list, html_path)
