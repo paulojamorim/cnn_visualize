@@ -26,12 +26,16 @@ def row(text):
 
     return row_start + '\n' + text + row_end + '\n'
 
-def cell(img_path):
+def cell(img_path, text=None):
 
     cell_start = '<td>'
     cell_end = '</td>'
 
-    img = '<img src="' + img_path + '" height="42" width="42">'
+    if img_path != None:
+        tag = '<img src="' + img_path + '" height="128" width="128">'
+    else:
+        tag = str(text[0]) + ' ' + str(text[1]) + ' ' + str(text[2])\
+                + 'x' + str(text[3])
 
-    return cell_start + '\n' + img + cell_end + '\n'
+    return cell_start + '\n' + tag + cell_end + '\n'
 

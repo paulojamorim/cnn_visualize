@@ -9,10 +9,16 @@ import imageio
 import html_template as ht
 
 from keras.applications.vgg16 import VGG16
+from keras.applications.vgg16 import preprocess_input
+from keras.preprocessing.image import load_img
+from keras.preprocessing.image import img_to_array
+from keras.models import Model
+from numpy import expand_dims
 
-IMG_FOLDER = '/img/'
+IMG_FOLDER_FILTERS = '/img_filters/'
+IMG_FOLDER_FEATURES = '/img_feature/'
 
-def write_html(files_path, html_path):
+def write_html_filter(files_path, html_path):
     html_file = open(html_path, 'w+')
  
     layers_html = ''
@@ -25,7 +31,7 @@ def write_html(files_path, html_path):
 
                     cell_line = ''
                     for channel_file in filters:
-                        channel_file = '.' + IMG_FOLDER + os.path.basename(channel_file)
+                        channel_file = '.' + IMG_FOLDER_FILTERS + os.path.basename(channel_file)
                         cell_line += ht.cell(channel_file)
                     
                     filters_html += ht.row(cell_line)
@@ -33,7 +39,23 @@ def write_html(files_path, html_path):
     html = ht.table(filters_html)
 
     html_file.write(html)
-    
+
+def write_html_feature(all_features, layer_detail, html_path):
+    html_file = open(html_path, 'w+')
+    ld=0
+    filters_html = ''
+    for ft in all_features:
+        cell_line = ''
+        cell_line += ht.cell(None, layer_detail[ld])
+        for f in ft:
+            f_file = '.' + IMG_FOLDER_FEATURES + os.path.basename(f)
+            cell_line += ht.cell(f_file)
+        ld += 1            
+        filters_html += ht.row(cell_line)
+                  
+    html = ht.table(filters_html)
+
+    html_file.write(html)
 
 def filter_visualize(model, layer_number, out_dir):
     """
@@ -87,6 +109,38 @@ def filter_visualize(model, layer_number, out_dir):
     
     return layer_
 
+
+def feature_visualize(model, outputs_i, img, out_dir):
+    
+    outputs = []
+    for i in outputs_i:
+        outputs.append(model.layers[i].output)
+    
+    model = Model(inputs=model.inputs, outputs=outputs)
+
+    # expand dimensions so that it represents a single 'sample'
+    img = expand_dims(img, axis=0)
+
+    # prepare the image (e.g. scale pixel values for the vgg)
+    img = preprocess_input(img)
+    
+    # get feature map for first hidden layer
+    feature_maps = model.predict(img)
+    
+    nf = 0 
+    all_features = []
+    for fmap in feature_maps:
+        features = []
+        for ix in range(fmap.shape[-1]):
+            fname =  str(nf) + '_' + str(ix) + '.png'
+            fpath = os.path.join(out_dir,fname)
+            imageio.imsave(fpath, fmap[0, :, :, ix])
+            features.append(fpath)
+        nf+=1
+        all_features.append(features)
+
+    return all_features
+
 def get_filters(model):
     
     filters_ = []
@@ -100,22 +154,67 @@ def get_filters(model):
     
     return filters_
 
+def get_features(model):
+
+    features = []
+    # summarize feature map shapes
+    for i in range(len(model.layers)):
+        layer = model.layers[i]
+        # check for convolutional layer
+        if 'conv' not in layer.name:
+            continue
+        # summarize output shape
+        features.append((i, layer.name, layer.output.shape))
+
+    return features
+
+
 if __name__ == '__main__':
 
     #Change for your model
     model = VGG16()
-    
-    out_dir = os.path.abspath(sys.argv[1]) + IMG_FOLDER
-    
-    if not(os.path.exists(out_dir)):
-        os.makedirs(out_dir)
-    
-    filters = get_filters(model)
-    for f in filters:
-        print(f)
 
-    filter_number = input('Select the filter number to generate visualization: ')
+    visualize = input('Enter 0 to visualize filter or 1 to visualize feature: ')
 
-    file_list = filter_visualize(model, int(filter_number), out_dir)
-    html_path = os.path.join(os.path.abspath(os.path.join(out_dir,"../")),'index.html')
-    write_html(file_list, html_path)
+    if visualize == '0':
+        out_dir = os.path.abspath(sys.argv[1]) + IMG_FOLDER_FILTERS
+        
+        if not(os.path.exists(out_dir)):
+            os.makedirs(out_dir)
+        
+        filters = get_filters(model)
+        for f in filters:
+            print(f)
+
+        filter_number = input('Select the filter number to generate visualization: ')
+
+        file_list = filter_visualize(model, int(filter_number), out_dir)
+        html_path = os.path.join(os.path.abspath(os.path.join(out_dir,"../")),'filters.html')
+        write_html_filter(file_list, html_path)
+
+    else:
+
+        # load the image with the required shape
+        img = load_img('bird2.jpg', target_size=(224, 224))
+        
+        # convert the image to an array
+        img = img_to_array(img)
+
+        out_dir = os.path.abspath(sys.argv[1]) + IMG_FOLDER_FEATURES
+
+        if not(os.path.exists(out_dir)):
+            os.makedirs(out_dir)
+
+        features = get_features(model)
+        
+        outputs_i = []
+        layer_detail = []
+        for f in features:
+            outputs_i.append(f[0])
+            print(f)
+            layer_detail.append([f[0], f[1], f[2][1], f[2][2], f[2][3]])
+
+        all_features = feature_visualize(model, outputs_i, img, out_dir)
+        html_path = os.path.join(os.path.abspath(os.path.join(out_dir,"../")),'features.html')
+
+        write_html_feature(all_features, layer_detail, html_path)
