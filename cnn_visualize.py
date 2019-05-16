@@ -6,6 +6,9 @@
 import os
 import sys
 import imageio
+from numpy import expand_dims
+import argparse
+
 import html_template as ht
 
 from keras.applications.vgg16 import VGG16
@@ -13,7 +16,6 @@ from keras.applications.vgg16 import preprocess_input
 from keras.preprocessing.image import load_img
 from keras.preprocessing.image import img_to_array
 from keras.models import Model
-from numpy import expand_dims
 
 IMG_FOLDER_FILTERS = '/img_filters/'
 IMG_FOLDER_FEATURES = '/img_feature/'
@@ -93,7 +95,9 @@ def filter_visualize(model, layer_number, out_dir):
                     if layer_number != -1:
 
                         if i_layer == layer_number:
-                            fname = str(i_layer) + '_' + str(ix) + '_' + str(j) + '.png'
+                            fname = str(i_layer) + '_' + str(ix) + '_'\
+                                    + str(j) + '.png'
+                            
                             fpath = os.path.join(out_dir,fname)
                             imageio.imsave(fpath, f[:,:,j])
 
@@ -171,36 +175,59 @@ def get_features(model):
 
 if __name__ == '__main__':
 
-    #Change for your model
+    #**** Change for your model ****
     model = VGG16()
 
-    visualize = input('Enter 0 to visualize filter or 1 to visualize feature: ')
+    parser = argparse.ArgumentParser(description='Visualize filter or\
+            features from CNN models.')
+    
+    parser.add_argument('-o','--output', dest='out_dir',\
+            type=str, help='A folder path to output html page', required=False) 
 
-    if visualize == '0':
-        out_dir = os.path.abspath(sys.argv[1]) + IMG_FOLDER_FILTERS
-        
-        if not(os.path.exists(out_dir)):
-            os.makedirs(out_dir)
-        
-        filters = get_filters(model)
-        for f in filters:
-            print(f)
+    parser.add_argument('-t','--type', dest='out_type',\
+            type=int, help='0 - Output filters\n 1 - Output features (default)',\
+            required=False) 
 
-        filter_number = input('Select the filter number to generate visualization: ')
+    parser.add_argument('-i','--img', dest='img_path',\
+            type=int, help='Image input to generate CNN features',\
+            required=False) 
 
-        file_list = filter_visualize(model, int(filter_number), out_dir)
-        html_path = os.path.join(os.path.abspath(os.path.join(out_dir,"../")),'filters.html')
-        write_html_filter(file_list, html_path)
+    parser.add_argument('-l','--layer', dest='filter_number',\
+            type=int, help='Filter number to save (default 1)',\
+            required=False) 
 
+
+    args = parser.parse_args()
+    
+    if args.out_dir:
+        out_dir = args.out_dir
     else:
+        out_dir = os.path.abspath('./html_output/')
 
-        # load the image with the required shape
-        img = load_img('bird2.jpg', target_size=(224, 224))
+    if args.out_type:
+        out_type = args.out_type
+    else:
+        out_type = 1
+
+    if args.img_path:
+        img_path = args.img_path
+    else:
+        img_path = os.path.abspath('./bird.jpg')
+
+    if args.filter_number:
+        filter_number = args.filter_number
+    else:
+        filter_number = 1
+
+    if out_type:
+
+        # *** Change for your target_size (VGG16 is 224x224 Input) ***
+        img = load_img(img_path, target_size=(224, 224))
         
         # convert the image to an array
         img = img_to_array(img)
 
-        out_dir = os.path.abspath(sys.argv[1]) + IMG_FOLDER_FEATURES
+        out_dir = out_dir + IMG_FOLDER_FEATURES
 
         if not(os.path.exists(out_dir)):
             os.makedirs(out_dir)
@@ -215,6 +242,28 @@ if __name__ == '__main__':
             layer_detail.append([f[0], f[1], f[2][1], f[2][2], f[2][3]])
 
         all_features = feature_visualize(model, outputs_i, img, out_dir)
-        html_path = os.path.join(os.path.abspath(os.path.join(out_dir,"../")),'features.html')
+        html_path = os.path.join(os.path.abspath(os.path.join(out_dir,"../")),\
+                'features.html')
 
         write_html_feature(all_features, layer_detail, html_path)
+        
+        
+    else:
+
+        out_dir = out_dir + IMG_FOLDER_FILTERS
+        
+        if not(os.path.exists(out_dir)):
+            os.makedirs(out_dir)
+        
+        filters = get_filters(model)
+        for f in filters:
+            print(f)
+
+        filter_number = input('Select the filter number to generate\
+                visualization: ')
+
+        file_list = filter_visualize(model, int(filter_number), out_dir)
+        html_path = os.path.join(os.path.abspath(os.path.join(out_dir,"../")),'filters.html')
+        write_html_filter(file_list, html_path)
+
+

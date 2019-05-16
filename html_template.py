@@ -35,7 +35,7 @@ def cell(img_path, text=None):
         tag = '<img src="' + img_path + '" height="128" width="128">'
     else:
         tag = str(text[0]) + ' ' + str(text[1]) + ' ' + str(text[2])\
-                + 'x' + str(text[3])
+                + 'x' + str(text[3]) + 'x' + str(text[4])
 
     return cell_start + '\n' + tag + cell_end + '\n'
 
