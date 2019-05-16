@@ -38,7 +38,7 @@ python cnn_visualize.py -t 2 -l 2
 
 ## Changing to your model:
 
-Change to your model:
+Change to your Keras model:
 
 ```
 179:  model = VGG16()
