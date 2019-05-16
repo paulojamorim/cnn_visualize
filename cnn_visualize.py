@@ -189,7 +189,7 @@ if __name__ == '__main__':
             required=False) 
 
     parser.add_argument('-i','--img', dest='img_path',\
-            type=int, help='Image input to generate CNN features',\
+            type=str, help='Image input to generate CNN features',\
             required=False) 
 
     parser.add_argument('-l','--layer', dest='filter_number',\
