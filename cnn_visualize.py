@@ -185,7 +185,7 @@ if __name__ == '__main__':
             type=str, help='A folder path to output html page', required=False) 
 
     parser.add_argument('-t','--type', dest='out_type',\
-            type=int, help='0 - Output filters\n 1 - Output features (default)',\
+            type=int, help='1 - Output features (default) \n 2 - Output filters',\
             required=False) 
 
     parser.add_argument('-i','--img', dest='img_path',\
@@ -219,7 +219,7 @@ if __name__ == '__main__':
     else:
         filter_number = 1
 
-    if out_type:
+    if out_type == 1:
 
         # *** Change for your target_size (VGG16 is 224x224 Input) ***
         img = load_img(img_path, target_size=(224, 224))
@@ -256,12 +256,11 @@ if __name__ == '__main__':
             os.makedirs(out_dir)
         
         filters = get_filters(model)
+        print("Filters:\n")
         for f in filters:
             print(f)
 
-        filter_number = input('Select the filter number to generate\
-                visualization: ')
-
+        print("Generate filter number", str(filter_number), '\n')
         file_list = filter_visualize(model, int(filter_number), out_dir)
         html_path = os.path.join(os.path.abspath(os.path.join(out_dir,"../")),'filters.html')
         write_html_filter(file_list, html_path)
