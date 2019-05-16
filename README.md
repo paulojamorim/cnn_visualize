@@ -1,7 +1,7 @@
 # CNN Visualize
 Display filters or features map of Convolutional Neural Networks (CNN) models of Keras in a HTML page.
 
-## To run
+## To run (VGG16 model)
 
 #### Because of the amount of images normally generated it is recommended to view in Firefox.
 
