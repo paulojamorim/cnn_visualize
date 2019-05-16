@@ -35,3 +35,16 @@ python cnn_visualize.py -t 2 -l 2
   -l FILTER_NUMBER, --layer FILTER_NUMBER
                         Filter number to save (default 1)
 ```
+
+## Changing to your model:
+
+Change to your model:
+
+```
+179:  model = VGG16()
+```
+Change target_size to your input size:
+
+```
+225:  img = load_img(img_path, target_size=(224, 224))
+```
